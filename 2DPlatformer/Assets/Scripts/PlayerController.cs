@@ -7,15 +7,12 @@ using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
 {
-    public Image Heart1;
-    public Image Heart2;
-    public Image Heart3;
-    
     [Header("UI")]
     public TMP_Text timerTxt;
     public float timer;
 
     [Header("Health")]
+    public Slider healthSlider;
     public int maxHealth;
     public int currentHealth;
 
@@ -41,6 +38,9 @@ public class PlayerController : MonoBehaviour
     {
         currentHealth = maxHealth;
         startPos = transform.position;
+
+        healthSlider.maxValue = maxHealth;
+
         isFacingRight = true;
     }
 
@@ -75,20 +75,11 @@ public class PlayerController : MonoBehaviour
 
     void Health()
     {
+        healthSlider.value = currentHealth;
+        
         if (currentHealth <= 0)
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-            Destroy(Heart1); // ---
-        }
-
-        if (currentHealth == 2) // ---
-        {
-            Destroy(Heart3);
-        }
-
-        if (currentHealth == 1) // ---
-        {
-            Destroy(Heart2);
+            SceneManager.LoadScene(5);
         }
     }
 
