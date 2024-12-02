@@ -24,9 +24,16 @@ public class PlayerController : MonoBehaviour
     [Header("Main")]
     public float moveSpeed;
     public float jumpForce;
+    int jumpCount;
+    private bool canDash = true;
+    private bool isDashing;
+    private float dashingPower = 24f;
+    private float dashingTime = 0.2f;
+    private float dashingCooldown = 1f;
+    public TrailRenderer tr;
     float inputs;
     public Rigidbody2D rb;
-    public float groundDistance;
+    public float groundDistance = 0.4f;
     public LayerMask layerMask;
 
     RaycastHit2D hit;
@@ -45,8 +52,13 @@ public class PlayerController : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    private void Update()
     {
+        if (isDashing)
+        {
+            return;
+        }
+
         timer += Time.deltaTime;
         timerTxt.text = timer.ToString("F3");
         
@@ -54,6 +66,29 @@ public class PlayerController : MonoBehaviour
         Health();
         Shoot();
         MovementDirection();
+
+        if (hit.collider)
+        {
+            jumpCount = 1;
+        }
+        if (Input.GetButtonDown("Jump") && jumpCount > 0)
+        {
+            rb.AddForce(transform.up * jumpForce, ForceMode2D.Impulse);
+            jumpCount--;
+        }
+
+        if (Input.GetKeyDown(KeyCode.LeftShift) && canDash)
+        {
+            StartCoroutine(Dash());
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        if (isDashing)
+        {
+            return;
+        }
     }
 
     void Movement()
@@ -63,14 +98,6 @@ public class PlayerController : MonoBehaviour
 
         hit = Physics2D.Raycast(transform.position, -transform.up, groundDistance, layerMask);
         Debug.DrawRay(transform.position, -transform.up * groundDistance, Color.yellow);
-
-        if (hit.collider)
-        {
-            if (Input.GetButtonDown("Jump"))
-            {
-                rb.AddForce(transform.up * jumpForce, ForceMode2D.Impulse);
-            }
-        }
     }
 
     void Health()
@@ -91,6 +118,22 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private IEnumerator Dash()
+    {
+        canDash = false;
+        isDashing = true;
+        float originalGravity = rb.gravityScale;
+        rb.gravityScale = 0f;
+        rb.velocity = new Vector2(transform.localScale.x * dashingPower, 0f);
+        tr.emitting = true;
+        yield return new WaitForSeconds(dashingTime);
+        tr.emitting = false;
+        rb.gravityScale = originalGravity;
+        isDashing = false;
+        yield return new WaitForSeconds(dashingCooldown);
+        canDash = true;
+    }
+
     void MovementDirection()
     {
         if (isFacingRight && inputs < -.1f)
@@ -107,6 +150,8 @@ public class PlayerController : MonoBehaviour
     {
         isFacingRight = !isFacingRight;
         transform.Rotate(0f, 180f, 0f);
+
+        dashingPower = -dashingPower;
     }
 
     private void OnTriggerEnter2D(Collider2D other) 
