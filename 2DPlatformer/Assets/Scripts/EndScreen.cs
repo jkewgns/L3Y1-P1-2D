@@ -9,4 +9,8 @@ public class EndScreen : MonoBehaviour
     {
         SceneManager.LoadScene("MainMenu");
     }
+    public void OnPlay()
+    {
+        SceneManager.LoadScene(1);
+    }
 }
